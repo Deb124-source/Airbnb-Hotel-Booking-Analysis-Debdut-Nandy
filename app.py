@@ -37,10 +37,10 @@ col1, col2 = st.columns(2)
 
 with col1:
 
-    host_id = st.number_input(
-        "Host ID",
-        value=12345
-    )
+  host_id = st.text_input(
+    "Host ID",
+    "12345"
+)
 
     neighbourhood_group = st.selectbox(
         "Neighbourhood Group",
@@ -175,15 +175,33 @@ st.divider()
 
 if st.button("Predict Price"):
 
+    # get exact columns
     required_columns = list(
         model.named_steps["preprocessor"].feature_names_in_
     )
 
 
+    # match column order
     input_data = input_data.reindex(
-        columns=required_columns,
-        fill_value=0
+        columns=required_columns
     )
+
+
+    # force categorical columns to string
+    categorical_cols = [
+        "host_id",
+        "neighbourhood_group",
+        "neighbourhood",
+        "room_type",
+        "stay_category"
+    ]
+
+
+    for col in categorical_cols:
+        input_data[col] = input_data[col].astype(str)
+
+
+    st.write(input_data)   # temporary debug
 
 
     prediction = model.predict(
@@ -191,10 +209,7 @@ if st.button("Predict Price"):
     )
 
 
-    price = round(
-        prediction[0],
-        2
-    )
+    price = round(prediction[0],2)
 
 
     st.success(
