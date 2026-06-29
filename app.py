@@ -322,7 +322,29 @@ if st.button("Predict Price"):
             .astype(str)
         )
 
+    st.write("INPUT DATA")
+    st.write(input_data)
 
+
+    preprocessor = model.named_steps["preprocessor"]
+
+    for name, transformer, columns in preprocessor.transformers_:
+
+        st.write("Transformer:", name)
+        st.write("Columns:", columns)
+
+        if hasattr(transformer, "named_steps"):
+
+             for step_name, step in transformer.named_steps.items():
+
+             st.write("Step:", step_name)
+
+             if hasattr(step, "categories_"):
+
+                 st.write(
+                    "Categories:",
+                    step.categories_
+                )
 
     prediction = model.predict(
         input_data
