@@ -173,46 +173,18 @@ input_data = pd.DataFrame({
 
 st.divider()
 
-
 if st.button("Predict Price"):
 
-
-    # Get required columns from trained pipeline
-
-    required_columns = model.named_steps["preprocessor"].feature_names_in_
-
-
-    # Add missing columns
-
-    for col in required_columns:
-
-        if col not in input_data.columns:
-
-            if col in [
-                "neighbourhood_group",
-                "neighbourhood",
-                "room_type",
-                "stay_category"
-            ]:
-                input_data[col] = "Unknown"
-
-            else:
-                input_data[col] = 0
+    required_columns = list(
+        model.named_steps["preprocessor"].feature_names_in_
+    )
 
 
+    input_data = input_data.reindex(
+        columns=required_columns,
+        fill_value=0
+    )
 
-    # Arrange columns same as training
-
-    input_data = input_data[required_columns]
-
-    st.write("Input columns:")
-st.write(input_data.columns.tolist())
-
-
-st.write("Model expects:")
-st.write(model.named_steps["preprocessor"].feature_names_in_.tolist())
-
-    # Prediction
 
     prediction = model.predict(
         input_data
