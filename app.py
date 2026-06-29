@@ -1,17 +1,13 @@
 import streamlit as st
 import pandas as pd
 import joblib
-import numpy as np
+import os
 
 
-@st.cache_resource
-def load_model():
-    return joblib.load("airbnb_price_model (1).pkl")
+# -----------------------------
+# Page Config
+# -----------------------------
 
-
-model = load_model()
-
-# Page config
 st.set_page_config(
     page_title="Airbnb Price Predictor",
     page_icon="🏠",
@@ -19,28 +15,54 @@ st.set_page_config(
 )
 
 
+# -----------------------------
+# Load Model
+# -----------------------------
+
+@st.cache_resource
+def load_model():
+
+    path = os.path.join(
+        os.path.dirname(__file__),
+        "airbnb_price_model (1).pkl"
+    )
+
+    return joblib.load(path)
+
+
+model = load_model()
+
+
+
+# -----------------------------
+# Title
+# -----------------------------
+
 st.title("🏠 Airbnb Price Prediction")
 st.write(
-    "Predict Airbnb listing price using XGBoost Regression"
+    "XGBoost based Airbnb price estimation model"
 )
 
 
 st.divider()
 
 
-# User Inputs
 
+# -----------------------------
 # User Inputs
+# -----------------------------
 
 col1, col2 = st.columns(2)
 
 
+
 with col1:
 
-  host_id = st.text_input(
-    "Host ID",
-    "12345"
-)
+    host_id = st.text_input(
+        "Host ID",
+        "12345"
+    )
+
 
     neighbourhood_group = st.selectbox(
         "Neighbourhood Group",
@@ -53,20 +75,24 @@ with col1:
         ]
     )
 
+
     neighbourhood = st.text_input(
         "Neighbourhood",
         "Midtown"
     )
+
 
     latitude = st.number_input(
         "Latitude",
         value=40.75
     )
 
+
     longitude = st.number_input(
         "Longitude",
         value=-73.98
     )
+
 
     room_type = st.selectbox(
         "Room Type",
@@ -78,7 +104,9 @@ with col1:
     )
 
 
+
 with col2:
+
 
     minimum_nights = st.number_input(
         "Minimum Nights",
@@ -86,41 +114,50 @@ with col2:
         value=3
     )
 
+
     number_of_reviews = st.number_input(
         "Number of Reviews",
         min_value=0,
         value=20
     )
 
+
     reviews_per_month = st.number_input(
-        "Reviews per Month",
+        "Reviews Per Month",
         min_value=0.0,
         value=2.0
     )
 
-    host_listings = st.number_input(
-        "Calculated Host Listings Count",
+
+    calculated_host_listings_count = st.number_input(
+        "Host Listings Count",
         min_value=1,
         value=1
     )
 
+
     availability_365 = st.number_input(
-        "Availability (365 Days)",
+        "Availability 365",
         min_value=0,
         max_value=365,
         value=200
     )
 
 
-# Feature Engineering (same as training)
 
-host_experience = host_listings
+# -----------------------------
+# Feature Engineering
+# -----------------------------
+
+
+host_experience = calculated_host_listings_count
 
 
 review_intensity = (
     number_of_reviews /
     (availability_365 + 1)
 )
+
 
 
 if minimum_nights <= 3:
@@ -137,71 +174,117 @@ else:
 
 
 
-# Final dataframe for model
+
+
+# -----------------------------
+# Create Input DataFrame
+# -----------------------------
+
 
 input_data = pd.DataFrame({
 
     "host_id": [host_id],
 
-    "neighbourhood_group": [neighbourhood_group],
+    "neighbourhood_group": [
+        neighbourhood_group
+    ],
 
-    "neighbourhood": [neighbourhood],
+    "neighbourhood": [
+        neighbourhood
+    ],
 
-    "latitude": [latitude],
+    "latitude": [
+        latitude
+    ],
 
-    "longitude": [longitude],
+    "longitude": [
+        longitude
+    ],
 
-    "room_type": [room_type],
+    "room_type": [
+        room_type
+    ],
 
-    "minimum_nights": [minimum_nights],
+    "minimum_nights": [
+        minimum_nights
+    ],
 
-    "number_of_reviews": [number_of_reviews],
+    "number_of_reviews": [
+        number_of_reviews
+    ],
 
-    "reviews_per_month": [reviews_per_month],
+    "reviews_per_month": [
+        reviews_per_month
+    ],
 
-    "calculated_host_listings_count": [host_listings],
+    "calculated_host_listings_count": [
+        calculated_host_listings_count
+    ],
 
-    "availability_365": [availability_365],
+    "availability_365": [
+        availability_365
+    ],
 
-    "host_experience": [host_experience],
+    "host_experience": [
+        host_experience
+    ],
 
-    "review_intensity": [review_intensity],
+    "review_intensity": [
+        review_intensity
+    ],
 
-    "stay_category": [stay_category]
+    "stay_category": [
+        stay_category
+    ]
 
 })
 
-st.divider()
+
+
+# -----------------------------
+# Prediction
+# -----------------------------
+
 
 if st.button("Predict Price"):
 
-    # get exact columns
+
+    # Get exact training columns
+
     required_columns = list(
-        model.named_steps["preprocessor"].feature_names_in_
+        model.named_steps[
+            "preprocessor"
+        ].feature_names_in_
     )
 
 
-    # match column order
-    input_data = input_data.reindex(
-        columns=required_columns
-    )
+    # Same order as training
+
+    input_data = input_data[
+        required_columns
+    ]
 
 
-    # force categorical columns to string
-    categorical_cols = [
+    # Convert categorical values
+
+    categorical_columns = [
+
         "host_id",
         "neighbourhood_group",
         "neighbourhood",
         "room_type",
         "stay_category"
+
     ]
 
 
-    for col in categorical_cols:
-        input_data[col] = input_data[col].astype(str)
+    for col in categorical_columns:
 
+        input_data[col] = (
+            input_data[col]
+            .astype(str)
+        )
 
-    st.write(input_data)   # temporary debug
 
 
     prediction = model.predict(
@@ -209,7 +292,12 @@ if st.button("Predict Price"):
     )
 
 
-    price = round(prediction[0],2)
+
+    price = round(
+        prediction[0],
+        2
+    )
+
 
 
     st.success(
