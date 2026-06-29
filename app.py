@@ -22,12 +22,12 @@ st.set_page_config(
 @st.cache_resource
 def load_model():
 
-    path = os.path.join(
+    model_path = os.path.join(
         os.path.dirname(__file__),
-        "airbnb_price_model (1).pkl"
+        "airbnb_price_model.pkl"
     )
 
-    return joblib.load(path)
+    return joblib.load(model_path)
 
 
 model = load_model()
@@ -40,7 +40,7 @@ model = load_model()
 
 st.title("🏠 Airbnb Price Prediction")
 st.write(
-    "XGBoost based Airbnb price estimation model"
+    "Predict Airbnb listing price using XGBoost Regression"
 )
 
 
@@ -49,18 +49,17 @@ st.divider()
 
 
 # -----------------------------
-# User Inputs
+# Inputs
 # -----------------------------
 
 col1, col2 = st.columns(2)
 
 
-
 with col1:
 
-    host_id = st.text_input(
+    host_id = st.number_input(
         "Host ID",
-        "12345"
+        value=12345
     )
 
 
@@ -174,16 +173,16 @@ else:
 
 
 
-
-
 # -----------------------------
-# Create Input DataFrame
+# Create Input Data
 # -----------------------------
 
 
 input_data = pd.DataFrame({
 
-    "host_id": [host_id],
+    "host_id": [
+        host_id
+    ],
 
     "neighbourhood_group": [
         neighbourhood_group
@@ -249,42 +248,18 @@ input_data = pd.DataFrame({
 if st.button("Predict Price"):
 
 
-    # Get exact training columns
+    # Ensure exact training order
 
-    required_columns = list(
-        model.named_steps[
-            "preprocessor"
-        ].feature_names_in_
+    required_columns = (
+        model
+        .named_steps["preprocessor"]
+        .feature_names_in_
     )
 
-
-    # Same order as training
 
     input_data = input_data[
         required_columns
     ]
-
-
-    # Convert categorical values
-
-    categorical_columns = [
-
-        "host_id",
-        "neighbourhood_group",
-        "neighbourhood",
-        "room_type",
-        "stay_category"
-
-    ]
-
-
-    for col in categorical_columns:
-
-        input_data[col] = (
-            input_data[col]
-            .astype(str)
-        )
-
 
 
     prediction = model.predict(
@@ -292,12 +267,10 @@ if st.button("Predict Price"):
     )
 
 
-
     price = round(
         prediction[0],
         2
     )
-
 
 
     st.success(
