@@ -30,10 +30,17 @@ st.divider()
 
 # User Inputs
 
+# User Inputs
+
 col1, col2 = st.columns(2)
 
 
 with col1:
+
+    host_id = st.number_input(
+        "Host ID",
+        value=12345
+    )
 
     neighbourhood_group = st.selectbox(
         "Neighbourhood Group",
@@ -46,6 +53,20 @@ with col1:
         ]
     )
 
+    neighbourhood = st.text_input(
+        "Neighbourhood",
+        "Midtown"
+    )
+
+    latitude = st.number_input(
+        "Latitude",
+        value=40.75
+    )
+
+    longitude = st.number_input(
+        "Longitude",
+        value=-73.98
+    )
 
     room_type = st.selectbox(
         "Room Type",
@@ -57,17 +78,7 @@ with col1:
     )
 
 
-    latitude = st.number_input(
-        "Latitude",
-        value=40.75
-    )
-
-
-    longitude = st.number_input(
-        "Longitude",
-        value=-73.98
-    )
-
+with col2:
 
     minimum_nights = st.number_input(
         "Minimum Nights",
@@ -75,22 +86,11 @@ with col1:
         value=3
     )
 
-
-with col2:
-
-
-    neighbourhood = st.text_input(
-        "Neighbourhood",
-        "Midtown"
-    )
-
-
     number_of_reviews = st.number_input(
         "Number of Reviews",
         min_value=0,
         value=20
     )
-
 
     reviews_per_month = st.number_input(
         "Reviews per Month",
@@ -98,21 +98,18 @@ with col2:
         value=2.0
     )
 
-
-    availability_365 = st.number_input(
-        "Availability (365 days)",
-        min_value=0,
-        max_value=365,
-        value=200
-    )
-
-
     host_listings = st.number_input(
-        "Host Listings Count",
+        "Calculated Host Listings Count",
         min_value=1,
         value=1
     )
 
+    availability_365 = st.number_input(
+        "Availability (365 Days)",
+        min_value=0,
+        max_value=365,
+        value=200
+    )
 
 
 # Feature Engineering (same as training)
@@ -127,21 +124,24 @@ review_intensity = (
 
 
 if minimum_nights <= 3:
+
     stay_category = "Short Stay"
 
 elif minimum_nights <= 30:
+
     stay_category = "Medium Stay"
 
 else:
+
     stay_category = "Long Stay"
 
 
 
-# Create dataframe
+# Final dataframe for model
 
 input_data = pd.DataFrame({
 
-    "host_id": [0],
+    "host_id": [host_id],
 
     "neighbourhood_group": [neighbourhood_group],
 
