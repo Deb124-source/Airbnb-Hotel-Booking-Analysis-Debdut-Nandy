@@ -24,7 +24,7 @@ def load_model():
 
     model_path = os.path.join(
         os.path.dirname(__file__),
-        "airbnb_price_model.pkl"
+        "airbnb_price_model (1).pkl"
     )
 
     return joblib.load(model_path)
