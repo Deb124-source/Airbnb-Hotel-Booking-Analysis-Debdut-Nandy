@@ -5,7 +5,7 @@ import os
 
 
 # -----------------------------
-# Page Setup
+# Page Config
 # -----------------------------
 
 st.set_page_config(
@@ -13,7 +13,6 @@ st.set_page_config(
     page_icon="🏠",
     layout="wide"
 )
-
 
 
 # -----------------------------
@@ -25,11 +24,10 @@ def load_model():
 
     model_path = os.path.join(
         os.path.dirname(__file__),
-        "airbnb_price_model (1).pkl"
+        "airbnb_price_model.pkl"
     )
 
     return joblib.load(model_path)
-
 
 
 model = load_model()
@@ -43,17 +41,15 @@ model = load_model()
 st.title("🏠 Airbnb Price Prediction")
 
 st.write(
-    "Predict Airbnb listing price using your trained ML pipeline"
+    "Enter listing details to estimate price"
 )
-
-
-st.divider()
 
 
 
 # -----------------------------
 # Inputs
 # -----------------------------
+
 
 col1, col2 = st.columns(2)
 
@@ -68,27 +64,15 @@ with col1:
     )
 
 
-    neighbourhood_group = st.selectbox(
+    neighbourhood_group = st.text_input(
         "Neighbourhood Group",
-        [
-            "Manhattan",
-            "Brooklyn",
-            "Queens",
-            "Bronx",
-            "Staten Island"
-        ]
+        "Manhattan"
     )
 
 
-    neighbourhood = st.selectbox(
+    neighbourhood = st.text_input(
         "Neighbourhood",
-        [
-            "Williamsburg",
-            "Harlem",
-            "Bushwick",
-            "Midtown",
-            "Upper West Side"
-        ]
+        "Midtown"
     )
 
 
@@ -104,13 +88,9 @@ with col1:
     )
 
 
-    room_type = st.selectbox(
+    room_type = st.text_input(
         "Room Type",
-        [
-            "Entire home/apt",
-            "Private room",
-            "Shared room"
-        ]
+        "Entire home/apt"
     )
 
 
@@ -120,39 +100,32 @@ with col2:
 
     minimum_nights = st.number_input(
         "Minimum Nights",
-        min_value=1,
         value=3
     )
 
 
     number_of_reviews = st.number_input(
         "Number of Reviews",
-        min_value=0,
         value=20
     )
 
 
     reviews_per_month = st.number_input(
         "Reviews Per Month",
-        min_value=0.0,
         value=2.0
     )
 
 
     calculated_host_listings_count = st.number_input(
         "Host Listings Count",
-        min_value=1,
         value=1
     )
 
 
     availability_365 = st.number_input(
         "Availability 365",
-        min_value=0,
-        max_value=365,
         value=200
     )
-
 
 
 
@@ -185,10 +158,8 @@ else:
 
 
 
-
-
 # -----------------------------
-# Create Dataframe
+# Input DataFrame
 # -----------------------------
 
 
@@ -252,7 +223,6 @@ input_data = pd.DataFrame({
 
 
 
-
 # -----------------------------
 # Prediction
 # -----------------------------
@@ -261,7 +231,7 @@ input_data = pd.DataFrame({
 if st.button("Predict Price"):
 
 
-    # Exact training columns
+    # Match training columns
 
     required_columns = (
         model
@@ -275,88 +245,23 @@ if st.button("Predict Price"):
     ]
 
 
+    # Force same datatype behavior
 
-    # Datatype correction
+    for col in input_data.columns:
 
+        if input_data[col].dtype == "object":
 
-    numeric_columns = [
+            input_data[col] = (
+                input_data[col]
+                .astype(str)
+            )
 
-        "host_id",
-        "latitude",
-        "longitude",
-        "minimum_nights",
-        "number_of_reviews",
-        "reviews_per_month",
-        "calculated_host_listings_count",
-        "availability_365",
-        "host_experience",
-        "review_intensity"
-
-    ]
-
-
-
-    for col in numeric_columns:
-
-        input_data[col] = pd.to_numeric(
-            input_data[col]
-        )
-
-
-
-    categorical_columns = [
-
-        "neighbourhood_group",
-        "neighbourhood",
-        "room_type",
-        "stay_category"
-
-    ]
-
-
-
-    for col in categorical_columns:
-
-        input_data[col] = (
-            input_data[col]
-            .astype(str)
-        )
-
-    st.write("INPUT DATA")
-    st.write(input_data)
-
-
-    preprocessor = model.named_steps["preprocessor"]
-
-    for name, transformer, columns in preprocessor.transformers_:
-
-        st.write("Transformer:", name)
-        st.write("Columns:", columns)
-
-        if hasattr(transformer, "named_steps"):
-
-             for step_name, step in transformer.named_steps.items():
-
-             st.write("Step:", step_name)
-
-             if hasattr(step, "categories_"):
-
-                 st.write(
-                    "Categories:",
-                    step.categories_
-                )
 
     prediction = model.predict(
         input_data
     )
 
 
-    price = round(
-        prediction[0],
-        2
-    )
-
-
     st.success(
-        f"Estimated Airbnb Price: ${price} per night"
+        f"Predicted Airbnb Price: ${round(prediction[0],2)}"
     )
